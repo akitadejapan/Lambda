@@ -1,3 +1,12 @@
+"""
+ツール名：認証情報レポート自動取得ツール
+頻度:月1回
+トリガー:Eventbridge
+概要:AWS Lambda を利用してIAM認証情報レポートを取得して、S3に保存する関数。
+環境変数:
+    - S3_BUCKET: ターゲットのS3バケット名
+"""
+
 import os
 import boto3
 import base64
@@ -18,12 +27,6 @@ iam = boto3.client('iam')
 S3_BUCKET = os.environ.get('S3_BUCKET')
 
 def lambda_handler(event, context):
-    """
-    AWS Lambda を利用してIAM認証情報レポートを取得して、S3に保存する関数。
-
-    環境変数:
-      - S3_BUCKET: ターゲットのS3バケット名
-    """
     # 1. 認証情報レポートを生成
     try:
         resp = iam.generate_credential_report()
