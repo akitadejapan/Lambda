@@ -1,3 +1,13 @@
+"""
+ツール名:IAMグループ情報取得ツール
+頻度:月1回
+トリガー:Eventbridge
+概要:AWS Lambda を利用してIAMグループ情報を取得して、S3に保存する関数。
+環境変数:
+    - AWS_S3_BUCKET_NAME: ターゲットのS3バケット名
+    - ACCOUNT_ID: AWSアカウントID
+"""
+
 import boto3
 import re
 import time
