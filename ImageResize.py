@@ -17,6 +17,11 @@ import os
 from PIL import Image
 import io
 import urllib.parse
+import logging
+import json
+
+logger = logging.getLogger()
+
 
 s3_client = boto3.client('s3')
 TARGET_BUCKET = os.environ['TARGET_BUCKET']
@@ -47,30 +52,36 @@ def lambda_handler(event, context):
         #S3イベントから情報を取得
         bucket = event['Records'][0]['s3']['bucket']['name']
         key = urllib.parse.unquote_plus(event['Records'][0]['s3']['object']['key'],encoding='utf-8')
-        print(key)
 
-        #contensフォルダ内の画像のみ処理
+        #contentsフォルダ内の画像のみ処理
+        #実際はcontentsフォルダにアップされたら処理するようにトリガーを設定しているため、この条件は不要
         if not key.startswith('contents/'):
-            return{
+            return_str = {
                 'statusCode': 200,
                 'body': 'Skipped: Not a target image'
             }
-        
-        #リサイズ済み画像はスキップ  
+            logger.info(json.dumps(return_str))
+            return json.dumps(return_str)
+
+        #リサイズ済み画像はスキップ
         if '-m.' in key or '-s.' in key:
-            return{
+            return_str = {
                 'statusCode': 200,
                 'body': 'Skipped: Already resized image'
             }
+            logger.info(json.dumps(return_str))
+            return json.dumps(return_str)
 
 
-        #対象の拡張子をチェック  
+        #対象の拡張子をチェック
         if not key.lower().endswith(('.jpg','.jpeg','.png','.webp')):
-            return{
+            return_str = {
                 'statusCode': 200,
                 'body': 'Skipped: Not a supported image format'
             }
-        
+            logger.info(json.dumps(return_str))
+            return json.dumps(return_str)
+
         #元画像を取得
         response = s3_client.get_object(Bucket=bucket, Key=key)
         image_bytes = response['Body'].read()
@@ -90,7 +101,6 @@ def lambda_handler(event, context):
             Key=m_key,
             Body=m_image
         )
-        # print(response)
 
         #Sサイズ(240px)を作成
         s_image = resize_image(image_bytes,240)
@@ -102,10 +112,14 @@ def lambda_handler(event, context):
             Body=s_image
         )
 
-        return{
+        return_str = {
             'statusCode': 200,
             'body': 'Successfully resized image'
         }
+
+        logger.info(json.dumps(return_str))
+        return json.dumps(return_str)
+    
     except Exception as e:
-        print(f'Error: {str(e)}')
+        logger.info(f'Error: {str(e)}')
         raise e
