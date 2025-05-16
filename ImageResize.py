@@ -18,7 +18,7 @@ from PIL import Image
 import io
 import urllib.parse
 import logging
-import json
+
 
 logger = logging.getLogger()
 
@@ -60,8 +60,8 @@ def lambda_handler(event, context):
                 'statusCode': 200,
                 'body': 'Skipped: Not a target image'
             }
-            logger.info(json.dumps(return_str))
-            return json.dumps(return_str)
+            logger.error(return_str)
+            return return_str
 
         #リサイズ済み画像はスキップ
         if '-m.' in key or '-s.' in key:
@@ -69,8 +69,8 @@ def lambda_handler(event, context):
                 'statusCode': 200,
                 'body': 'Skipped: Already resized image'
             }
-            logger.info(json.dumps(return_str))
-            return json.dumps(return_str)
+            logger.error(return_str)
+            return return_str
 
 
         #対象の拡張子をチェック
@@ -79,8 +79,8 @@ def lambda_handler(event, context):
                 'statusCode': 200,
                 'body': 'Skipped: Not a supported image format'
             }
-            logger.info(json.dumps(return_str))
-            return json.dumps(return_str)
+            logger.error(return_str)
+            return return_str
 
         #元画像を取得
         response = s3_client.get_object(Bucket=bucket, Key=key)
@@ -117,9 +117,9 @@ def lambda_handler(event, context):
             'body': 'Successfully resized image'
         }
 
-        logger.info(json.dumps(return_str))
-        return json.dumps(return_str)
+        logger.info(return_str)
+        return return_str
     
     except Exception as e:
-        logger.info(f'Error: {str(e)}')
+        logger.error(f'Error: {str(e)}')
         raise e
